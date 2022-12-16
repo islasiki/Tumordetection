@@ -4,6 +4,5 @@ numpy==1.23.0
 pydub==0.25.1
 streamlit==1.10.0
 streamlit_webrtc==0.43.0
-portaudio19-dev
-python3-all-dev
+
 Pyaudio
