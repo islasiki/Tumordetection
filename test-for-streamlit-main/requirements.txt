@@ -4,6 +4,11 @@ numpy==1.23.0
 pydub==0.25.1
 streamlit==1.10.0
 streamlit_webrtc==0.43.0
-https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+libasound-dev 
+portaudio19-dev 
+libportaudio2 
+libportaudiocpp0 
+ffmpeg 
+libav-tools
 PyAudio
 
