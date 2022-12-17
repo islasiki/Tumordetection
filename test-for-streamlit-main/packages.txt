@@ -5,5 +5,5 @@ libportaudio2
 libportaudiocpp0 
 ffmpeg
 build-essential 
-
+libjack-jackd2-dev
 
