@@ -1,8 +1,6 @@
+libasound2-dev
 portaudio19-dev
-libasound2-dev 
 libportaudio2
 libportaudiocpp0 
-ffmpeg
-build-essential 
-libjack-jackd2-dev
+ffmpeg 
 
