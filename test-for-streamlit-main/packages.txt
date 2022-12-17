@@ -1,4 +1,4 @@
-python3-pyaudio
+portaudio
 libasound2-dev 
 portaudio19-dev 
 libportaudio2
