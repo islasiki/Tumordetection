@@ -1,1 +1,8 @@
- libasound2-dev portaudio19-dev libportaudio2 libportaudiocpp0 ffmpeg
+libasound2-dev 
+portaudio19-dev 
+libportaudio2
+libportaudiocpp0 
+ffmpeg
+build-essential 
+portaudio19-dev 
+python3.10-dev
