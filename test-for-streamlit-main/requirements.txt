@@ -8,4 +8,4 @@ requests
 wheel
 setuptools
 Pyaudio
-
+--upgrade pip
