@@ -1,5 +1,6 @@
-libjack-jackd2-dev
+libasound2-dev 
 portaudio19-dev 
-update -y
--y python-pyaudio
+libportaudio2 
+libportaudiocpp0
+ffmpeg 
 
