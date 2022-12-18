@@ -6,5 +6,4 @@ streamlit
 streamlit_webrtc
 requests
 wheel
-setuptools
---no-use-pep517 PyAudio
+PyAudio
