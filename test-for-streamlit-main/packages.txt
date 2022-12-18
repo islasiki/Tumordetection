@@ -1,3 +1,4 @@
+upgrade python-pip
 build-essential
 portaudio19-dev
 python3.10-dev
