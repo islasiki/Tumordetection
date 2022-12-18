@@ -10,3 +10,4 @@ PyAudio
 torch
 torchvision
 torchaudio
+websocket
