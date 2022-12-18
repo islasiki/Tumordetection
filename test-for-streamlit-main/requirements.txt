@@ -7,4 +7,5 @@ streamlit_webrtc
 requests
 wheel
 PyAudio
-
+torch
+torchvision
