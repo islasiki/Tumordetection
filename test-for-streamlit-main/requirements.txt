@@ -6,4 +6,4 @@ streamlit
 streamlit_webrtc
 requests
 wheel
-PyAudio==0.2.11
+PyAudio
