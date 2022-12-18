@@ -11,3 +11,4 @@ torch
 torchvision
 torchaudio
 websocket
+opencv-contrib-python-headless
