@@ -7,4 +7,4 @@ streamlit_webrtc
 requests
 wheel
 setuptools
-Pyaudio
+PyAudio
