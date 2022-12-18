@@ -1,9 +1,0 @@
-av
-deepspeech
-numpy
-pydub
-streamlit
-streamlit_webrtc
-requests
-wheel
-PyAudio
