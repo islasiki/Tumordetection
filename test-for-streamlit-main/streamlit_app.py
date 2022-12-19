@@ -358,7 +358,7 @@ def segmentation(x,color=torch.tensor([255, 0, 0])):
 
     net = Baseline(img_ch=1, num_classes=3, depth=2).cpu()
     net.load_state_dict(torch.load(
-        "/Tumordetection/test-for-streamlit-main/weights.pth"))
+        "./test-for-streamlit-main/weights.pth"))
     #net.half()
     net.eval()
 
