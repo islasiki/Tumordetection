@@ -482,7 +482,7 @@ if uploaded_file is not None:
     st.image(uploaded_file, caption='Input Image', use_column_width=True)
     img = img.unsqueeze(0)
         # img=img.half()
-    img = img.to('cuda')
+    img = img.to('cpu')
 
     segmentation(img)
 
