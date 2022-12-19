@@ -356,7 +356,7 @@ def segmentation(x,color=torch.tensor([255, 0, 0])):
      the result of Tumor predict is
      """)
 
-    net = Baseline(img_ch=1, num_classes=3, depth=2).cuda()
+    net = Baseline(img_ch=1, num_classes=3, depth=2).cpu()
     net.load_state_dict(torch.load(
         "c:\\users\\napoleon\\desktop\\test-for-streamlit-main\\checkpoint\\unet_depth=2_fold_2_dice_223135.pth"))
     #net.half()
