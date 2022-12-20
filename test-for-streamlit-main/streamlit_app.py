@@ -220,7 +220,7 @@ def app_sst2():
         return
     run()
     model1 = SM.M5()
-    model1.load_state_dict(torch.load('c:/users/napoleon/desktop/test-for-streamlit-main/weights.pth'))
+    model1.load_state_dict(torch.load('./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth' ,map_location=torch.device('cpu')))
     model1.eval()
     del (model1.ConvLayer[1])
     del (model1.ConvLayer[4])
