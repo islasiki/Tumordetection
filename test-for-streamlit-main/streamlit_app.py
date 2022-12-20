@@ -184,108 +184,108 @@ def run(img):
 
 
 
-# def app_sst1():
-#     global img
-#     webrtc_ctx = webrtc_streamer(
-#         key="speech-to-text",
-#         mode=WebRtcMode.SENDONLY,
-#         audio_receiver_size=1024,
-#         rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-#         media_stream_constraints={"video": False, "audio": True},
-#     )
+def app_sst1():
+    global img
+    webrtc_ctx = webrtc_streamer(
+        key="speech-to-text",
+        mode=WebRtcMode.SENDONLY,
+        audio_receiver_size=1024,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={"video": False, "audio": True},
+    )
 
-#     status_indicator = st.empty()
+    status_indicator = st.empty()
 
-#     if not webrtc_ctx.state.playing:
-#         return
-#     run(img)
+    if not webrtc_ctx.state.playing:
+        return
+    run(img)
 
 
-# def app_sst2():
-#     st.write('11111111111111111111111')
+def app_sst2():
+    st.write('11111111111111111111111')
 
-#     webrtc_ctx = webrtc_streamer(
-#         key="speech-to-text",
-#         mode=WebRtcMode.SENDONLY,
-#         audio_receiver_size=1024,
-#         rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-#         media_stream_constraints={"video": False, "audio": True},
-#     )
+    webrtc_ctx = webrtc_streamer(
+        key="speech-to-text",
+        mode=WebRtcMode.SENDONLY,
+        audio_receiver_size=1024,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={"video": False, "audio": True},
+    )
 
-#     st.write('22222222222222222222222222222222')
-#     status_indicator = st.empty()
+    st.write('22222222222222222222222222222222')
+    status_indicator = st.empty()
 
-#     st.write('3333333333333333333333333333333333333333')
-#     if not webrtc_ctx.state.playing:
-#         return
-#     run()
-#     model1 = SM.M5()
-#     model1.load_state_dict(torch.load('./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth' ,map_location=torch.device('cpu')))
-#     model1.eval()
-#     del (model1.ConvLayer[1])
-#     del (model1.ConvLayer[4])
-#     del (model1.ConvLayer[7])
-#     del (model1.ConvLayer[10])
-#     new_sample_rate = 8000
-#     transform = torchaudio.transforms.Resample(orig_freq=16000, new_freq=new_sample_rate)
-#     status_indicator.write("Loading...")
-#     text_output = st.empty()
-#     stream = None
-#     i = 0
-#     buffer_all = []
-#     # while True:
-#     st.write('55555555555555555555555555555555555555')
-#     while True:
-#         if webrtc_ctx.audio_receiver:
-#             sound_chunk = pydub.AudioSegment.empty()
-#             try:
-#                 audio_frames = webrtc_ctx.audio_receiver.get_frames(timeout=1)
-#             except queue.Empty:
-#                 time.sleep(0.1)
-#                 status_indicator.write("No frame arrived.")
-#                 continue
+    st.write('3333333333333333333333333333333333333333')
+    if not webrtc_ctx.state.playing:
+        return
+    run()
+    model1 = SM.M5()
+    model1.load_state_dict(torch.load('./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth' ,map_location=torch.device('cpu')))
+    model1.eval()
+    del (model1.ConvLayer[1])
+    del (model1.ConvLayer[4])
+    del (model1.ConvLayer[7])
+    del (model1.ConvLayer[10])
+    new_sample_rate = 8000
+    transform = torchaudio.transforms.Resample(orig_freq=16000, new_freq=new_sample_rate)
+    status_indicator.write("Loading...")
+    text_output = st.empty()
+    stream = None
+    i = 0
+    buffer_all = []
+    # while True:
+    st.write('55555555555555555555555555555555555555')
+    while True:
+        if webrtc_ctx.audio_receiver:
+            sound_chunk = pydub.AudioSegment.empty()
+            try:
+                audio_frames = webrtc_ctx.audio_receiver.get_frames(timeout=1)
+            except queue.Empty:
+                time.sleep(0.1)
+                status_indicator.write("No frame arrived.")
+                continue
 
-#             status_indicator.write("Running. Say something!")
+            status_indicator.write("Running. Say something!")
 
-#             for audio_frame in audio_frames:
-#                 sound = pydub.AudioSegment(
-#                     data=audio_frame.to_ndarray().tobytes(),
-#                     sample_width=audio_frame.format.bytes,
-#                     frame_rate=audio_frame.sample_rate,
-#                     channels=len(audio_frame.layout.channels),
-#                 )
-#                 sound_chunk += sound
+            for audio_frame in audio_frames:
+                sound = pydub.AudioSegment(
+                    data=audio_frame.to_ndarray().tobytes(),
+                    sample_width=audio_frame.format.bytes,
+                    frame_rate=audio_frame.sample_rate,
+                    channels=len(audio_frame.layout.channels),
+                )
+                sound_chunk += sound
 
-#             if len(sound_chunk) > 0:
-#                 sound_chunk = sound_chunk.set_channels(1).set_frame_rate(
-#                     16000
-#                 )
-#                 a = len(sound_chunk)
-#                 buffer = np.array(sound_chunk.get_array_of_samples())
-#                 buffer_all = np.append(buffer_all, buffer)
+            if len(sound_chunk) > 0:
+                sound_chunk = sound_chunk.set_channels(1).set_frame_rate(
+                    16000
+                )
+                a = len(sound_chunk)
+                buffer = np.array(sound_chunk.get_array_of_samples())
+                buffer_all = np.append(buffer_all, buffer)
 
-#                 # text_output.markdown(f"**Text:** {text}")
-#         else:
-#             status_indicator.write("AudioReciver is not set. Abort.")
-#             break
-#         i += 1
-#         if i % 50 == 0:
-#             i = 0
-#             buffer_all = buffer_all[0:16000]
-#             input = torch.tensor(buffer_all, dtype=torch.float)
-#             input = transform(input)
-#             input = input.unsqueeze(0)
-#             input = input.unsqueeze(0)
-#             # st.write(buffer_all.shape)
-#             # st.audio(buffer_all, sample_rate=16000)
-#             output = model1(input)
-#             buffer_all = []
-#             label = SM.tensor2label(output)
-#             st.write(label)
-#             time.sleep(0.1)
+                # text_output.markdown(f"**Text:** {text}")
+        else:
+            status_indicator.write("AudioReciver is not set. Abort.")
+            break
+        i += 1
+        if i % 50 == 0:
+            i = 0
+            buffer_all = buffer_all[0:16000]
+            input = torch.tensor(buffer_all, dtype=torch.float)
+            input = transform(input)
+            input = input.unsqueeze(0)
+            input = input.unsqueeze(0)
+            # st.write(buffer_all.shape)
+            # st.audio(buffer_all, sample_rate=16000)
+            output = model1(input)
+            buffer_all = []
+            label = SM.tensor2label(output)
+            st.write(label)
+            time.sleep(0.1)
 
-#     # x=torch.ones(2,1,512,512).cuda()
-#     return label
+    # x=torch.ones(2,1,512,512).cuda()
+    return label
 
 def app_sst(model_path: str, lm_path: str, lm_alpha: float, lm_beta: float, beam: int):
     webrtc_ctx = webrtc_streamer(
