@@ -1,6 +1,6 @@
 numpy
 pydub
-streamlit==1.10.0
+streamlit
 streamlit_webrtc==0.43.0
 requests
 wheel
