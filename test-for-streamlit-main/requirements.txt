@@ -5,8 +5,8 @@ streamlit_webrtc==0.43.0
 requests
 wheel
 PyAudio
-torch
-torchvision
+torch-cpu
+torchvision-cpu
 torchaudio
 opencv-contrib-python-headless
 websocket-client
