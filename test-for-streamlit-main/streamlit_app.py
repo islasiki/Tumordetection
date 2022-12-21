@@ -140,27 +140,37 @@ def on_open(ws):
 
                 #for audio_frame in audio_frames:
 
-                    frame=audio_frame.to_ndarray().tobytes()
+
+                    sound=pydub.AudioSegment(
+                        data=audio_frame.to_ndarray().tobytes(),
+                        sample_width=audio_frame.format.bytes,
+                        frame_rate=audio_frame.sample_rate,
+                        channels=len(audio_frame.layout.channels)
+                    )
+                    sound=sound.set_channels(1).set_frame_rate(16000)
+                    frame=np.array(sound.get_array_of_samples()).tobytes()
+                    #print(type(frame))
 
                     #print(str(frame))
                     #print(len(frame))
                         #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+
                     d = {"common": wsParam.CommonArgs,
-                             "business": wsParam.BusinessArgs,
-                             "data": {"status": 1, "format": "audio/L16;rate=16000",
-                                      "audio": str(base64.b64encode(frame),'utf-8'),
-                                      "encoding": "raw"}}
+                         "business": wsParam.BusinessArgs,
+                         "data": {"status": 1, "format": "audio/L16;rate=16000",
+                                  "audio": str(base64.b64encode(frame), 'utf-8'),
+                                  "encoding": "raw"}}
                     d = json.dumps(d)
                     ws.send(d)
-                    status=STATUS_CONTINUE_FRAME
+                    #status=STATUS_CONTINUE_FRAME
                     #print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
             if status == STATUS_CONTINUE_FRAME:
                 #for audio_frame in audio_frames:
 
                     frame=audio_frame.to_ndarray().tobytes()
-                    #print(len(frame))
-                    print(len(str(base64.b64encode(frame))))
+                    print(len(frame))
+
                         #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
                     d = {"data": {"status": 1, "format": "audio/L16;rate=16000",
                                       "audio": str(base64.b64encode(frame),'utf-8'),
