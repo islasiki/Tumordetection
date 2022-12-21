@@ -5,7 +5,6 @@ import logging.handlers
 import queue
 import ssl
 import time
-import urllib.request
 from pathlib import Path
 import re
 
@@ -35,7 +34,6 @@ STATUS_LAST_FRAME = 2  # 最后一帧的标识
 
 # 收到websocket消息的处理
 def on_message(ws, message):
-
     #st.write(ws.img)
     try:
 
@@ -52,33 +50,43 @@ def on_message(ws, message):
             for i in data:
                 for w in i["cw"]:
                     result += w["w"]
-
+            print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            st.write(result)
+            print(result)
+            print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
             if result == '。' or result == '.。' or result == ' .。' or result == ' 。':
                 pass
             else:
                 # t.insert(END, result)  # 把上边的标点插入到result的最后
                 # print("翻译结果: %s。" % (result))
-                #st.write(result)
+                print('############################################')
+                st.write(result)
+                print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$44')
                 #st.write('detect?',bool(re.search(r'[dD]etect',result)))
-                if bool(re.search('[Cc]an you hear me',result)) is True:
+
+                if bool(re.search(r'[Rr]o.{,2}tation|[Rr]o.{,2}tate|[Ll]ocation|[Rr]oot',result)):
+                    st.write('Rotating the picture...')
+                    segmentation(ws.img.transpose(-1,-2), color=ws.color)
+
+                if bool(re.search(r'[Cc]an you hear me',result)) is True:
                     st.write('Yes! Please tell me the instruction!')
-                if bool(re.search('[Gg]reen',result)) is True:
+                if bool(re.search(r'[Gg]reen',result)) is True:
                     ws.color=torch.tensor([0,255,0])
                     ws.flag='green'
                     st.write('Successfully change the color to ',ws.flag,'!')
                     #st.write(ws.color)
-                if bool(re.search('[Rr]ed',result)) is True:
+                if bool(re.search(r'[Rr]ed',result)) is True:
                     ws.color=torch.tensor([255,0,0])
                     ws.flag ='red'
                     st.write('Successfully change the color to ', ws.flag, '!')
                     #st.write(ws.color)
-                if bool(re.search('[Bb]lue',result)) is True:
+                if bool(re.search(r'[Bb]lue',result)) is True:
                     ws.color=torch.tensor([0,0,255])
                     ws.flag ='blue'
                     st.write('Successfully change the color to ', ws.flag, '!')
                     #st.write(ws.color)
 
-                if bool(re.search(r'[dD]etect',result)) is True:
+                if bool(re.search(r'[dD]etect|[Oo]peration',result)) is True:
                     st.write('Detecting...')
                     if ws.flag is not None:
                         st.write('Changing color of mask to ',ws.flag)
@@ -90,13 +98,9 @@ def on_message(ws, message):
                     st.write('Thanks for using me! Goodbye!')
                     ws.close()
 
-
-
-
-
     except Exception as e:
         print("receive msg,but parse exception:", e)
-    return result
+
 
 
 # 收到websocket错误的处理
@@ -112,64 +116,151 @@ def on_close(ws):
 
 # 收到websocket连接建立的处理
 def on_open(ws):
+    global webrtc_ctx
+    #print(webrtc_ctx)
+    #st.write('open')
     def run(*args):
-        status = STATUS_FIRST_FRAME  # 音频的状态信息，标识音频是第一帧，还是中间帧、最后一帧
-        CHUNK = 520  # 定义数据流块
-        FORMAT = pyaudio.paInt16  # 16bit编码格式
-        CHANNELS = 1  # 单声道
-        RATE = 16000  # 16000采样频率
-        # 实例化pyaudio对象
-        p = pyaudio.PyAudio()  # 录音
-        # 创建音频流
-        # 使用这个对象去打开声卡，设置采样深度、通道数、采样率、输入和采样点缓存数量
-        stream = p.open(format=FORMAT,  # 音频流wav格式
-                        channels=CHANNELS,  # 单声道
-                        rate=RATE,  # 采样率16000
-                        input=True,
-                        frames_per_buffer=CHUNK)
+        #print(webrtc_ctx)
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+        status = STATUS_FIRST_FRAME
+        #status_indicator = st.empty()
+        #print('*************************************')
+        if not webrtc_ctx.state.playing:
+            return
 
-        print("- - - - - - - Start Recording ...- - - - - - - ")
-
-        for i in range(0, int(RATE / CHUNK * 60)):
-            # # 读出声卡缓冲区的音频数据
-            buf = stream.read(CHUNK)
-            if not buf:
-                status = STATUS_LAST_FRAME
+        #status_indicator.write("Loading...")
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        while True:
+            audio_frame = webrtc_ctx.audio_receiver.get_frame()
+            #print(status)
+            # if not audio_frames:
+            #     status = STATUS_LAST_FRAME
             if status == STATUS_FIRST_FRAME:
+                #status_indicator.write("Running. Say something!")
 
-                d = {"common": wsParam.CommonArgs,
-                     "business": wsParam.BusinessArgs,
-                     "data": {"status": 0, "format": "audio/L16;rate=16000",
-                              "audio": str(base64.b64encode(buf), 'utf-8'),
-                              "encoding": "raw"}}
-                d = json.dumps(d)
-                ws.send(d)
-                status = STATUS_CONTINUE_FRAME
-                # 中间帧处理
-            elif status == STATUS_CONTINUE_FRAME:
-                d = {"data": {"status": 1, "format": "audio/L16;rate=16000",
-                              "audio": str(base64.b64encode(buf), 'utf-8'),
-                              "encoding": "raw"}}
-                ws.send(json.dumps(d))
+                #for audio_frame in audio_frames:
 
-            # 最后一帧处理
-            elif status == STATUS_LAST_FRAME:
-                d = {"data": {"status": 2, "format": "audio/L16;rate=16000",
-                              "audio": str(base64.b64encode(buf), 'utf-8'),
-                              "encoding": "raw"}}
-                ws.send(json.dumps(d))
-                time.sleep(1)
-                break
+                    frame=audio_frame.to_ndarray().tobytes()
 
-        stream.stop_stream()  # 暂停录制
-        stream.close()  # 终止流
-        p.terminate()  # 终止pyaudio会话
-        ws.close()
+                    #print(str(frame))
+                    #print(len(frame))
+                        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+                    d = {"common": wsParam.CommonArgs,
+                             "business": wsParam.BusinessArgs,
+                             "data": {"status": 1, "format": "audio/L16;rate=16000",
+                                      "audio": str(base64.b64encode(frame),'utf-8'),
+                                      "encoding": "raw"}}
+                    d = json.dumps(d)
+                    ws.send(d)
+                    status=STATUS_CONTINUE_FRAME
+                    #print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+            if status == STATUS_CONTINUE_FRAME:
+                #for audio_frame in audio_frames:
+
+                    frame=audio_frame.to_ndarray().tobytes()
+                    #print(len(frame))
+                    print(len(str(base64.b64encode(frame))))
+                        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+                    d = {"data": {"status": 1, "format": "audio/L16;rate=16000",
+                                      "audio": str(base64.b64encode(frame),'utf-8'),
+                                      "encoding": "raw"}}
+                    ws.send(json.dumps(d))
+
+
+                    # 最后一帧处理
+            if status == STATUS_LAST_FRAME:
+                #for audio_frame in audio_frames:
+
+                    frame=audio_frame.to_ndarray().tobytes()
+
+
+                        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+                    d = {"data": {"status": 2, "format": "audio/L16;rate=16000",
+                                      "audio": str(base64.b64encode(frame), 'utf-8'),
+                                      "encoding": "raw"}}
+                    ws.send(json.dumps(d))
+                    time.sleep(1)
+
+                    break
+
+            # else:
+            #     #status_indicator.write("AudioReciver is not set. Abort.")
+            #     break
+
+        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+
+        ###################################################################3
+        # status = STATUS_FIRST_FRAME  # 音频的状态信息，标识音频是第一帧，还是中间帧、最后一帧
+        # CHUNK = 520  # 定义数据流块
+        # FORMAT = pyaudio.paInt16  # 16bit编码格式
+        # CHANNELS = 1  # 单声道
+        # RATE = 16000  # 16000采样频率
+        # # 实例化pyaudio对象
+        #
+        # p = pyaudio.PyAudio()  # 录音
+        # # 创建音频流
+        # # 使用这个对象去打开声卡，设置采样深度、通道数、采样率、输入和采样点缓存数量
+        #
+        # stream = p.open(format=FORMAT,  # 音频流wav格式
+        #                 channels=CHANNELS,  # 单声道
+        #                 rate=RATE,  # 采样率16000
+        #                 input=True,
+        #                 frames_per_buffer=CHUNK)
+        #
+        # print("- - - - - - - Start Recording ...- - - - - - - ")
+        #
+        # for i in range(0, int(RATE / CHUNK * 60)):
+        #     # # 读出声卡缓冲区的音频数据
+        #
+        #     buf = stream.read(CHUNK)
+        #
+        #     if not buf:
+        #         status = STATUS_LAST_FRAME
+        #     if status == STATUS_FIRST_FRAME:
+        #         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1')
+        #
+        #         d = {"common": wsParam.CommonArgs,
+        #              "business": wsParam.BusinessArgs,
+        #              "data": {"status": 0, "format": "audio/L16;rate=16000",
+        #                       "audio": str(base64.b64encode(buf), 'utf-8'),
+        #                       "encoding": "raw"}}
+        #         d = json.dumps(d)
+        #         print('##############################################')
+        #         ws.send(d)
+        #         print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+        #         status = STATUS_CONTINUE_FRAME
+        #         # 中间帧处理
+        #     elif status == STATUS_CONTINUE_FRAME:
+        #         d = {"data": {"status": 1, "format": "audio/L16;rate=16000",
+        #                       "audio": str(base64.b64encode(buf), 'utf-8'),
+        #                       "encoding": "raw"}}
+        #         ws.send(json.dumps(d))
+        #
+        #     # 最后一帧处理
+        #     elif status == STATUS_LAST_FRAME:
+        #         d = {"data": {"status": 2, "format": "audio/L16;rate=16000",
+        #                       "audio": str(base64.b64encode(buf), 'utf-8'),
+        #                       "encoding": "raw"}}
+        #         ws.send(json.dumps(d))
+        #         time.sleep(1)o
+        #         break
+        #
+        # stream.stop_stream()  # 暂停录制
+        # stream.close()  # 终止流
+        # p.terminate()  # 终止pyaudio会话
+        # ws.close()
 
     thread.start_new_thread(run, ())
 
+def app_sst(img):
+    global webrtc_ctx
 
-def run(img):
+    status_indicator = st.empty()
+
+    if not webrtc_ctx.state.playing:
+        return
+    st.write('Hello! I am your little instruction assistant! If you want to do some operation on the picture, tell me please!')
     global wsParam
     # 讯飞接口
     wsParam = Ws_Param(APPID='fb41b9d3',
@@ -177,50 +268,26 @@ def run(img):
                        APISecret='MjE1ZDI2ZDJmYzhhZTE4OGM4OGUyNTE5')
     websocket.enableTrace(False)
     wsUrl = wsParam.create_url()
-    ws = MyWebsocket(wsUrl, on_message=on_message, on_error=on_error, on_close=on_close,img=img)
+    ws = MyWebsocket(wsUrl, on_message=on_message, on_error=on_error, on_close=on_close, img=img)
     ws.on_open = on_open
     ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE}, ping_timeout=2)
 
-
-
-
-def app_sst1():
-    global img
-    webrtc_ctx = webrtc_streamer(
-        key="speech-to-text",
-        mode=WebRtcMode.SENDONLY,
-        audio_receiver_size=1024,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-        media_stream_constraints={"video": False, "audio": True},
-    )
-
-    status_indicator = st.empty()
-
-    if not webrtc_ctx.state.playing:
-        return
-    run(img)
-
-
 def app_sst2():
-    st.write('11111111111111111111111')
 
     webrtc_ctx = webrtc_streamer(
         key="speech-to-text",
         mode=WebRtcMode.SENDONLY,
-        audio_receiver_size=1024,
+        audio_receiver_size=256,
         rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
         media_stream_constraints={"video": False, "audio": True},
     )
 
-    st.write('22222222222222222222222222222222')
     status_indicator = st.empty()
 
-    st.write('3333333333333333333333333333333333333333')
     if not webrtc_ctx.state.playing:
         return
-    run()
     model1 = SM.M5()
-    model1.load_state_dict(torch.load('./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth' ,map_location=torch.device('cpu')))
+    model1.load_state_dict(torch.load('c:/users/napoleon/desktop/test-for-streamlit-main/weights.pth'))
     model1.eval()
     del (model1.ConvLayer[1])
     del (model1.ConvLayer[4])
@@ -234,12 +301,14 @@ def app_sst2():
     i = 0
     buffer_all = []
     # while True:
-    st.write('55555555555555555555555555555555555555')
+
     while True:
         if webrtc_ctx.audio_receiver:
             sound_chunk = pydub.AudioSegment.empty()
             try:
                 audio_frames = webrtc_ctx.audio_receiver.get_frames(timeout=1)
+                frame=webrtc_ctx.audio_receiver.get_frame()
+
             except queue.Empty:
                 time.sleep(0.1)
                 status_indicator.write("No frame arrived.")
@@ -287,78 +356,14 @@ def app_sst2():
     # x=torch.ones(2,1,512,512).cuda()
     return label
 
-def app_sst(model_path: str, lm_path: str, lm_alpha: float, lm_beta: float, beam: int):
-    webrtc_ctx = webrtc_streamer(
-        key="speech-to-text",
-        mode=WebRtcMode.SENDONLY,
-        audio_receiver_size=1024,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-        media_stream_constraints={"video": False, "audio": True},
-    )
-
-    status_indicator = st.empty()
-
-    if not webrtc_ctx.state.playing:
-        return
-
-    status_indicator.write("Loading...")
-    text_output = st.empty()
-    stream = None
-
-    while True:
-        if webrtc_ctx.audio_receiver:
-            if stream is None:
-                from deepspeech import Model
-
-                model = Model(model_path)
-                model.enableExternalScorer(lm_path)
-                model.setScorerAlphaBeta(lm_alpha, lm_beta)
-                model.setBeamWidth(beam)
-
-                stream = model.createStream()
-
-                status_indicator.write("Model loaded.")
-
-            sound_chunk = pydub.AudioSegment.empty()
-            try:
-                audio_frames = webrtc_ctx.audio_receiver.get_frames(timeout=1)
-            except queue.Empty:
-                time.sleep(0.1)
-                status_indicator.write("No frame arrived.")
-                continue
-
-            status_indicator.write("Running. Say something!")
-
-            for audio_frame in audio_frames:
-                sound = pydub.AudioSegment(
-                    data=audio_frame.to_ndarray().tobytes(),
-                    sample_width=audio_frame.format.bytes,
-                    frame_rate=audio_frame.sample_rate,
-                    channels=len(audio_frame.layout.channels),
-                )
-                sound_chunk += sound
-
-            if len(sound_chunk) > 0:
-                sound_chunk = sound_chunk.set_channels(1).set_frame_rate(
-                    model.sampleRate()
-                )
-                buffer = np.array(sound_chunk.get_array_of_samples())
-                stream.feedAudioContent(buffer)
-                text = stream.intermediateDecode()
-                text_output.markdown(f"**Text:** {text}")
-        else:
-            status_indicator.write("AudioReciver is not set. Abort.")
-            break
-
-
 def segmentation(x,color=torch.tensor([255, 0, 0])):
     st.markdown("""
      the result of Tumor predict is
      """)
 
-    net = Baseline(img_ch=1, num_classes=3, depth=2).cpu()
+    net = Baseline(img_ch=1, num_classes=3, depth=2).cuda()
     net.load_state_dict(torch.load(
-        "./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth" ,map_location=torch.device('cpu')))
+         "./test-for-streamlit-main/checkpoint/unet_depth=2_fold_2_dice_223135.pth" ,map_location=torch.device('cpu')))
     #net.half()
     net.eval()
 
@@ -467,6 +472,14 @@ Tumor image editor is mainly a fusion of natural language and image segmentation
     )
 uploaded_file = st.file_uploader("Choose an image of tumor to test")
 img=0
+webrtc_ctx = webrtc_streamer(
+        key="speech-to-text",
+        mode=WebRtcMode.SENDONLY,
+        audio_receiver_size=1024,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={"video": False, "audio": True},
+
+    )
 
 
 if uploaded_file is not None:
@@ -480,11 +493,12 @@ if uploaded_file is not None:
     img = img.unsqueeze(0)
 
     st.image(uploaded_file, caption='Input Image', use_column_width=True)
+
     img = img.unsqueeze(0)
         # img=img.half()
     img = img.to('cpu')
 
     segmentation(img)
 
-if app_sst1():
+if app_sst(img):
     print()
