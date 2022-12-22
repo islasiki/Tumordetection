@@ -1,7 +1,7 @@
 numpy
 pydub
 streamlit==1.10.0
-streamlit_webrtc==0.43.0
+streamlit_webrtc==0.44.0
 requests
 wheel
 PyAudio
